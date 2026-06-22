@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Rata Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #4f6bff 0%, #ff6ec4 100%);
+            min-height: 100vh;
+        }
+        .calculator-container {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(79, 107, 255, 0.5);
+        }
+        .result-box {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="calculator-container w-full max-w-md p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Pro-Rata Calculator</h1>
+            <p class="text-white/80">Calculate your prorated amount based on daily rate</p>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label for="startDate" class="block text-sm font-medium text-white mb-1">Start Date</label>
+                <input type="date" id="startDate" class="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-800 focus:bg-white transition">
+            </div>
+
+            <div>
+                <label for="endDate" class="block text-sm font-medium text-white mb-1">End Date</label>
+                <input type="date" id="endDate" class="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-800 focus:bg-white transition">
+            </div>
+
+            <div>
+                <label for="monthlyFee" class="block text-sm font-medium text-white mb-1">Monthly Fee (£)</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                    <input type="number" id="monthlyFee" placeholder="0.00" class="w-full pl-8 px-4 py-3 rounded-lg bg-white/90 text-gray-800 focus:bg-white transition">
+                </div>
+            </div>
+
+            <button onclick="calculateProRata()" class="w-full bg-white text-indigo-600 font-semibold py-3 px-4 rounded-lg hover:bg-gray-100 transition duration-200 flex items-center justify-center">
+                <i data-feather="calculator" class="mr-2"></i> Calculate
+            </button>
+
+            <div id="result" class="result-box p-6 rounded-lg hidden">
+                <h3 class="text-lg font-semibold text-white mb-3">Calculation Result</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-white/80">Total Days</p>
+                        <p id="totalDays" class="text-xl font-bold text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-white/80">Daily Rate</p>
+                        <p id="dailyRate" class="text-xl font-bold text-white">£0.00</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/20">
+                    <p class="text-sm text-white/80">Ex VAT Amount</p>
+                    <p id="exVatAmount" class="text-3xl font-bold text-white">£0.00</p>
+                    <p class="text-sm text-white/80 mt-1">VAT Amount (20%)</p>
+                    <p id="vatAmount" class="text-2xl font-bold text-white">£0.00</p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/20">
+                    <p class="text-sm text-white/80">Total Amount (incl. VAT)</p>
+                    <p id="proratedAmount" class="text-3xl font-bold text-white">£0.00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        
+        function calculateProRata() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            const monthlyFee = parseFloat(document.getElementById('monthlyFee').value);
+
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                alert('Please select valid start and end dates');
+                return;
+            }
+
+            if (isNaN(monthlyFee) || monthlyFee <= 0) {
+                alert('Please enter a valid monthly fee');
+                return;
+            }
+
+            if (endDate < startDate) {
+                alert('End date must be after start date');
+                return;
+            }
+
+            // Calculate difference in days
+            const timeDiff = endDate.getTime() - startDate.getTime();
+            const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end dates
+            
+            // Calculate daily rate (30 days per month)
+            const dailyRate = monthlyFee / 30;
+            
+            // Calculate prorated amount
+            const proratedAmount = dailyRate * dayDiff;
+            
+            // Calculate ex VAT amount and VAT
+            const exVatAmount = proratedAmount / 1.20;
+            const vatAmount = proratedAmount - exVatAmount;
+            
+            // Display results
+            document.getElementById('totalDays').textContent = dayDiff;
+            document.getElementById('dailyRate').textContent = `£${dailyRate.toFixed(2)}`;
+            document.getElementById('proratedAmount').textContent = `£${proratedAmount.toFixed(2)}`;
+            document.getElementById('exVatAmount').textContent = `£${exVatAmount.toFixed(2)}`;
+            document.getElementById('vatAmount').textContent = `£${vatAmount.toFixed(2)}`;
+            
+            // Show result box
+            document.getElementById('result').classList.remove('hidden');
+        }
+
+        // Set default dates to today and tomorrow
+        window.onload = function() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            document.getElementById('startDate').valueAsDate = today;
+            document.getElementById('endDate').valueAsDate = tomorrow;
+        };
+    </script>
+</body>
+</html>
